@@ -1,20 +1,22 @@
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.Binding;
-import javax.naming.NamingEnumeration;
-import javax.naming.NamingException;
+package com.vakamisu.jndi.naming;
+
+import com.sun.jndi.fscontext.RefFSContext;
+
+import javax.naming.*;
 import java.util.Hashtable;
 
 public class FSNamingServiceJNDI {
 
-    public static void main(String [] args) {
+    public static void main(String[] args) throws NamingException {
+
+        Context context = null;
 
         try {
             // Create the initial context.  The environment
             // information specifies the JNDI provider to use
             // and the initial URL to use (in our case, a
             // directory in URL form -- file:///...).
-            Hashtable hashtableEnvironment = new Hashtable();
+            Hashtable<String, String> hashtableEnvironment = new Hashtable<>();
 
             hashtableEnvironment.put(
                     Context.INITIAL_CONTEXT_FACTORY,
@@ -26,7 +28,7 @@ public class FSNamingServiceJNDI {
                     args[0]
             );
 
-            Context context = new InitialContext(hashtableEnvironment);
+            context = new InitialContext(hashtableEnvironment);
 
             // If you provide no other command line arguments,
             // list all of the names in the specified context and
@@ -46,11 +48,10 @@ public class FSNamingServiceJNDI {
                     );
                 }
             }
-
-            context.close();
-        }
-        catch (NamingException namingexception) {
-            namingexception.printStackTrace();
+        } finally {
+            if (context != null) {
+                context.close();
+            }
         }
     }
 
@@ -62,7 +63,10 @@ public class FSNamingServiceJNDI {
                     binding.getName() + " " +
                             binding.getObject()
             );
-            if (binding.getObject().toString().contains("com.sun.jndi.fscontext.RefFSContext")){
+
+            //Checking if current obj is sub-context (dir)
+            //if true, show it bindings recursively
+            if (binding.getObject() instanceof RefFSContext) {
                 System.out.printf("---------------------------------DIR %s BELOW---------------------------------\n\n",binding.getName());
                 listFiles((Context) binding.getObject());
                 System.out.printf("---------------------------------END OF %s------------------------------------\n",binding.getName());
